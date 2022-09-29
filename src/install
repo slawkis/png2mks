@@ -1,0 +1,8 @@
+To compile this program :
+    qmake
+    make
+    
+or:
+
+    g++ base64.cpp main.cpp -lpng -std=c++17 -O2 -I.  -o th_png2mks
+    
