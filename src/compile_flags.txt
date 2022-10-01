@@ -1,0 +1,13 @@
+-I/home/steev/c/codelite/png2mks
+-I/usr/include/png++
+-I/usr/include/libpng16
+-I/usr/include/c++/12.2.0
+-I/usr/include/c++/12.2.0/x86_64-pc-linux-gnu
+-I/usr/include/c++/12.2.0/backward
+-I/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include
+-I/usr/local/include
+-I/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include-fixed
+-I/usr/include
+-std=c++17
+-target
+x86_64-pc-linux-gnu

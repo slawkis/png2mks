@@ -1,3 +1,15 @@
+/*
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+*/
+
 #include <iostream>
 #include <bits/stdc++.h>
 #include <fstream>
@@ -9,12 +21,50 @@
 #include <memory>
 #include <regex>
 
-#include <base64.h>
-
-#include <png++/png.hpp>
+int decodePNG(std::vector<unsigned char>& , unsigned long& , unsigned long& , const unsigned char* , size_t , bool );
 
 using namespace std;
 namespace fs = std::filesystem;
+
+unsigned static int b64val( char c) {
+    switch(c) {
+	case 'A' ... 'Z'	: return c - 'A';
+        case 'a' ... 'z'	: return c - 'a' + 0b011010;
+        case '0' ... '9'	: return c - '0' + 0b110100;
+	case '+'		: return 0b111110;
+        case '/'		: return 0b111111;
+	default			: return 0b000000;
+    }
+}
+
+//  000000.11 1111.2222 22.333333
+
+string b64decode(const string& b64 ) {
+    
+    stringstream bin;
+    unsigned int tmp[4];
+    char dec;
+    auto ptr=b64.begin();
+	
+	bin.clear();
+    while(ptr!=b64.end()) {
+		tmp[0]=b64val(*ptr); ptr++;
+		tmp[1]=b64val(*ptr); ptr++;
+			dec=(tmp[0]<<2 | tmp[1]>>4)&0xff;
+			bin << dec;
+		if (*ptr != '=') {
+			tmp[2]=b64val(*ptr); ptr++;
+			dec = (tmp[1]<<4 | tmp[2]>>2)&0xff;
+			bin << dec;
+		} else break;
+		if (*ptr != '=') {
+			tmp[3]=b64val(*ptr); ptr++;
+			dec = (tmp[2]<<6 | tmp[3])&0xff;
+			bin << dec;
+		} else break;
+    }
+	return bin.str();
+}
 
 void inline log(std::unique_ptr<ofstream>& olog, string msg) {
     if (olog->is_open()) {
@@ -36,28 +86,40 @@ void scan (std::unique_ptr<fstream>& gc, string size, string& thumbnail ) {
     }
 }
 
+////int decodePNG(std::vector<unsigned char>& , unsigned long& , unsigned long& , const unsigned char* , size_t , bool );
 
-string convert_b64 (string& b64, png_uint_32 size, std::unique_ptr<ofstream>& olog) {
+typedef struct rgba {
+	unsigned char r;
+	unsigned char g;
+	unsigned char b;
+	unsigned char a;
+} rgba;
 
-    std::istringstream mb;
+
+string convert_b64 (string& b64,unsigned int size, std::unique_ptr<ofstream>& olog) {
+
+    string mb;
     std::stringstream thumb;
+	vector<unsigned char> image;
+	unsigned long w,h;
+	rgba * pixels;
+	int pixel;
 
-    png::image<png::rgb_pixel>image;
-    png_uint_32 pixel;
+    mb = b64decode(b64);
+	decodePNG(image,w,h,reinterpret_cast<const unsigned char*>(mb.c_str()),mb.length(),true);
 
-    mb.str(base64_decode(b64));
-    image.read_stream(mb);
-    if ((image.get_height()!=size)||(image.get_width() !=size)) {
-        log(olog,to_string(size)+"x"+to_string(size)+ "thumbnail size is "+to_string(image.get_width())+"x"+to_string(image.get_height()));
+	pixels = reinterpret_cast<rgba*>(image.data());
+	
+    if ((h!=size)||(w!=size)) {
+        log(olog,to_string(size)+"x"+to_string(size)+ "thumbnail size is "+to_string(w)+"x"+to_string(h));
         return "";
     }
-    for (png_uint_32 y=0; y<size; y++) {
-        for (png_uint_32 x=0; x<size; x++) {
-//        ((r & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (b >> 3);
-            pixel  =  image[y][x].blue >> 3;
-            pixel |= (image[y][x].green & 0xfc)<<3;
-            pixel |= (image[y][x].red   & 0xf8)<<8;
-            thumb << std::setfill ('0') << std::setw(2) << std::hex << int(pixel & 0xff);
+    for (unsigned int y=0; y<size; y++) {
+        for (unsigned int x=0; x<size; x++) {
+            pixel  =  pixels[x+y*size].b >> 3;
+            pixel |= (pixels[x+y*size].g & 0xfc)<<3;
+            pixel |= (pixels[x+y*size].r & 0xf8)<<8;
+            thumb << std::setfill ('0') << std::setw(2) << std::hex << int( pixel     & 0xff);
             thumb << std::setfill ('0') << std::setw(2) << std::hex << int((pixel>>8) & 0xff);
 
         }
@@ -67,9 +129,6 @@ string convert_b64 (string& b64, png_uint_32 size, std::unique_ptr<ofstream>& ol
 }
 
 void convert(string fname, string bname, int flog) {
-
-    png::image<png::rgb_pixel>image;
-
 
     std::unique_ptr<fstream>  gcode(new fstream);
     std::unique_ptr<fstream>  gout (new fstream);
