@@ -1,8 +1,3 @@
-To compile this program :
-    qmake
-    make
-    
-or:
+To compile this program just type :
 
-    g++ base64.cpp main.cpp -lpng -std=c++17 -O2 -I.  -o th_png2mks
-    
+    g++ picopng.cpp main.cpp -std=c++17 -O2 -o th_png2mks
