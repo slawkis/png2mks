@@ -16,6 +16,7 @@
 #include <ostream>
 #include <cstring>
 #include <string>
+#include <sstream>
 #include <filesystem>
 #include <memory>
 #include <regex>
