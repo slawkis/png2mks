@@ -1,5 +1,12 @@
 To compile this program just type :
 
     g++ picopng.cpp main.cpp -std=c++17 -O2 -o th_png2mks
-or    
+or
     g++ picopng.cpp main.cpp -std=c++17 -O2 -o th_png2mks -static
+
+
+Optionally : 
+    mkdir build
+    cd build
+    cmake ..
+    make
