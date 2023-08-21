@@ -10,3 +10,4 @@ In addition to the file name, it accepts two other  parameters:<br>
   --keep - keep the temporary file<br>
   --log - save any errors to the log file<br>
   
+Note: will not work with Neptune 3 & later (different thumbnail format)
